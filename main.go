@@ -153,7 +153,7 @@ func handle_connection(connection net.Conn) {
 
 func main() {
 	log.Println("Hello World!!!")
-	server_adrr := "130.193.50.203:6969"
+	server_adrr := "127.0.0.1:6969"
 	lisener, err := net.Listen("tcp", server_adrr)
 
 	if err != nil {
