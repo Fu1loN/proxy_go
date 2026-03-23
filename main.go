@@ -80,7 +80,7 @@ func handle_connection(connection net.Conn) {
 	case 0x01:
 		address_length = 4
 	case 0x04:
-		address_length = 16
+		connection.Write([]byte{0x05, 0x08, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 	case 0x03:
 		size := make([]byte, 1)
 		_, err = connection.Read(size)
