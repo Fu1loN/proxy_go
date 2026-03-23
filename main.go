@@ -119,12 +119,12 @@ func handle_connection(connection net.Conn) {
 	log.Println(fulladrrs)
 	host_conn, err := net.Dial(connection_type, fulladrrs)
 	if err != nil {
-		log.Println("error while connecting to host %v", fulladrrs)
+		log.Printf("error while connecting to host %s", fulladrrs)
 		connection.Write([]byte{0x04})
 		return
 	}
 	defer host_conn.Close()
-	log.Printf("succesfully connected to %v", fulladrrs)
+	log.Printf("succesfully connected to %s", fulladrrs)
 	localAddr, ok := host_conn.LocalAddr().(*net.TCPAddr)
 	if !ok {
 		log.Println("something with extracting addres from connection")
