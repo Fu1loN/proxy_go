@@ -132,7 +132,9 @@ func handle_connection(connection net.Conn) {
 	case 0x01:
 		address_length = 4
 	case 0x04:
+
 		connection.Write([]byte{0x05, 0x08, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+		log.Printf("ansup ipv6")
 		return
 	case 0x03:
 		size := make([]byte, 1)
@@ -169,7 +171,7 @@ func handle_connection(connection net.Conn) {
 	}
 	port_string := fmt.Sprintf("%d", (int16(port[0])<<8 | int16(port[1])))
 	fulladrrs := net.JoinHostPort(net.IP(address).String(), port_string)
-	log.Println(fulladrrs)
+	// log.Println(fulladrrs) nahui eto zdes
 	host_conn, err := net.Dial(connection_type, fulladrrs)
 	if err != nil {
 		log.Printf("error while connecting to host %s", fulladrrs)
