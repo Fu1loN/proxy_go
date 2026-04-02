@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/binary"
+	"flag"
 	"fmt"
+	en "go_proxy/encryptPass"
 	"io"
 	"log"
 	"net"
@@ -36,6 +38,46 @@ func write_to_conn_from(readConn, writeConn net.Conn, wg *sync.WaitGroup) {
 	}
 }
 
+var authorize_map = map[string]string{"test_user_1": "4343502f356ecd54471a59a5dfc2084f8349e696699df723a3c3183157eed467"}
+
+func authorize(connection net.Conn) error {
+	loginSize := make([]byte, 2)
+
+	auth_err := fmt.Errorf("Some error while authorization")
+	_, err := connection.Read(loginSize)
+	if err != nil {
+		read_err(err)
+		return auth_err
+	}
+	// first byte is protocol version who cares tho
+	login := make([]byte, uint8(loginSize[1]))
+	_, err = connection.Read(login)
+	if err != nil {
+		read_err(err)
+		return auth_err
+	}
+	passSize := make([]byte, 1)
+	_, err = connection.Read(passSize)
+	if err != nil {
+		read_err(err)
+		return auth_err
+	}
+	password := make([]byte, uint8(passSize[0]))
+	_, err = connection.Read(password)
+	if err != nil {
+		read_err(err)
+		return auth_err
+	}
+	if expectedPassword, ok := authorize_map[string(login)]; ok {
+		if !en.Compare(expectedPassword, password) {
+			return auth_err
+		}
+		return nil
+	}
+
+	return auth_err
+}
+
 func handle_connection(connection net.Conn) {
 	defer connection.Close()
 
@@ -59,11 +101,20 @@ func handle_connection(connection net.Conn) {
 	}
 
 	// TODO uprgade to auth
-	if !slices.Contains(methods, byte(0x00)) {
+	if !slices.Contains(methods, byte(0x02)) {
 		log.Printf("error methods do not contains no auth")
 		return
 	}
-	connection.Write([]byte{0x05, 0x00})
+	connection.Write([]byte{0x05, 0x02})
+
+	err = authorize(connection)
+	if err != nil {
+		log.Printf("Auth error %v", err)
+		connection.Write([]byte{0x01, 0x01})
+		return
+	}
+	connection.Write([]byte{0x01, 0x00})
+
 	request := make([]byte, 4)
 	_, err = connection.Read(request)
 	if err != nil {
@@ -72,7 +123,6 @@ func handle_connection(connection net.Conn) {
 	}
 
 	// log.Println("accesible")
-
 	command := request[1]
 	addres_type := request[3]
 	var address_length int
@@ -152,8 +202,8 @@ func handle_connection(connection net.Conn) {
 	wg.Wait()
 }
 
-func main() {
-	log.Println("Hello World!!!")
+func serve() {
+
 	server_adrr := "0.0.0.0:6969"
 	lisener, err := net.Listen("tcp", server_adrr)
 
@@ -171,5 +221,18 @@ func main() {
 		go handle_connection(connection)
 
 	}
+
+}
+
+func main() {
+	encrypt := flag.Bool("e", false, "need to encrypt")
+	flag.Parse()
+
+	if *encrypt {
+		pass := flag.Arg(0)
+		fmt.Printf("%x", []byte(en.EncryptString([]byte(pass))))
+		return
+	}
+	serve()
 
 }
