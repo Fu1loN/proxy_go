@@ -23,7 +23,7 @@ func write_to_conn_from(readConn, writeConn net.Conn, wg *sync.WaitGroup) {
 		n, err := readConn.Read(buffer)
 		if err != nil {
 			if err == io.EOF {
-				log.Println("Connection closed by peer")
+				// log.Println("Connection closed by peer")
 				return
 			}
 			log.Printf("error while reading data: %v", err)
@@ -38,6 +38,7 @@ func write_to_conn_from(readConn, writeConn net.Conn, wg *sync.WaitGroup) {
 	}
 }
 
+// TODO store outtside
 var authorize_map = map[string]string{"test_user_1": "4343502f356ecd54471a59a5dfc2084f8349e696699df723a3c3183157eed467"}
 
 func authorize(connection net.Conn) error {
@@ -79,6 +80,8 @@ func authorize(connection net.Conn) error {
 }
 
 func handle_connection(connection net.Conn) {
+	// TODO timeout on handshake
+	// TODO refactor we need more functions
 	defer connection.Close()
 
 	version := make([]byte, 2)
@@ -100,7 +103,6 @@ func handle_connection(connection net.Conn) {
 		return
 	}
 
-	// TODO uprgade to auth
 	if !slices.Contains(methods, byte(0x02)) {
 		log.Printf("error methods do not contains no auth")
 		return
@@ -156,7 +158,7 @@ func handle_connection(connection net.Conn) {
 		read_err(err)
 		return
 	}
-	log.Printf("connecting to %v:%v", address, port)
+	// log.Printf("connecting to %v:%v", address, port)
 	var connection_type string
 	switch command {
 	case 0x01:
@@ -175,7 +177,7 @@ func handle_connection(connection net.Conn) {
 		return
 	}
 	defer host_conn.Close()
-	log.Printf("succesfully connected to %v", fulladrrs)
+	// log.Printf("succesfully connected to %v", fulladrrs)
 	localAddr, ok := host_conn.LocalAddr().(*net.TCPAddr)
 	if !ok {
 		log.Println("something with extracting addres from connection")
@@ -227,7 +229,7 @@ func serve() {
 func main() {
 	encrypt := flag.Bool("e", false, "need to encrypt")
 	flag.Parse()
-
+	//TODO tf why server encrypts low priority tho it works
 	if *encrypt {
 		pass := flag.Arg(0)
 		fmt.Printf("%x", []byte(en.EncryptString([]byte(pass))))
