@@ -6,7 +6,7 @@ from aiogram.filters import Command
 
 
 with open('token.txt') as f:
-    TOKEN = f.read()
+    TOKEN = f.read().strip()
 
 # Включаем логирование, чтобы видеть ошибки и сообщения в консоли
 logging.basicConfig(level=logging.INFO)
